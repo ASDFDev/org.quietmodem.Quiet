@@ -134,6 +134,10 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
     cache.frame_stats.klass = (jclass)((*env)->NewGlobalRef(env, localFrameStatsClass));
     (*env)->DeleteLocalRef(env, localFrameStatsClass);
 
+    // fields
+    cache.java.interrupted_bytes =
+        (*env)->GetFieldID(env, cache.java.interrupted_io_exception_klass, "bytesTransferred", "I");
+
     cache.system.ptr =
         (*env)->GetFieldID(env, cache.system.klass, "sys_ptr", "J");
 
@@ -166,10 +170,6 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
 
     cache.frame_stats.ctor =
         (*env)->GetMethodID(env, cache.frame_stats.klass, "<init>", "([Lorg/quietmodem/Quiet/Complex;FFZ)V");
-		
-    cache.input_stream.fd = (*env)->GetFieldID(env, cache.input_stream.klass, "fd", "I");
-
-    cache.output_stream.fd = (*env)->GetFieldID(env, cache.output_stream.klass, "fd", "I");
 
     return JNI_VERSION_1_4;
 }

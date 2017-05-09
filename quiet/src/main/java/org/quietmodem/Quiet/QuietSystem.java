@@ -6,7 +6,6 @@ public class QuietSystem {
     private native long nativeOpen() throws ModemException;
     private native void nativeClose();
     private native void nativeOpenOpenSL() throws ModemException;
-    private native void nativeOpenLoopback() throws ModemException;
 
     final long sys_ptr;
     private boolean init_opensl;

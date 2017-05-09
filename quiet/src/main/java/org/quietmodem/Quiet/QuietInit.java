@@ -1,10 +1,8 @@
 package org.quietmodem.Quiet;
 
 public class QuietInit {
-    private static native void nativeLWIPInit();
 
     private static boolean has_init = false;
-    
 
     static void init() {
         if (has_init) {

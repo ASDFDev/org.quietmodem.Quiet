@@ -136,14 +136,18 @@ typedef struct {
 
 typedef struct {
     jclass unknown_host_exception_klass;
+    jclass socket_timeout_exception_klass;
+    jfieldID socket_timeout_bytes;
     jclass interrupted_io_exception_klass;
     jfieldID interrupted_bytes;
     jclass eof_exception_klass;
     jclass bind_exception_klass;
     jclass connect_exception_klass;
+    jclass socket_exception_klass;
     jclass io_exception_klass;
     jclass out_of_memory_error_klass;
     jclass illegal_arg_klass;
+    jclass no_route_exception_klass;
 } java_java_cache;
 
 typedef struct {
