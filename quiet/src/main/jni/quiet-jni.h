@@ -113,11 +113,6 @@ SLresult quiet_opensl_create_recorder(quiet_opensl_system *sys,
 SLresult quiet_opensl_stop_recorder(quiet_opensl_recorder *recorder);
 void quiet_opensl_destroy_recorder(quiet_opensl_recorder *recorder);
 
-// n.b (1024 samples) / (23220 microseconds) ~= 44100 samples/second
-extern const int loopback_sample_rate;
-extern const int loopback_sleep;
-extern const int loopback_buffer_length;
-
 typedef struct {
     quiet_opensl_system *opensl_sys;
 } quiet_android_system;
@@ -202,8 +197,6 @@ typedef struct {
     java_decoder_cache decoder;
     java_complex_cache complex;
     java_frame_stats_cache frame_stats;
-    java_input_stream_cache input_stream;
-    java_output_stream_cache output_stream;
 } java_cache;
 
 extern java_cache cache;
