@@ -3,7 +3,7 @@ package org.quietmodem.Quiet;
 import java.io.IOException;
 
 public abstract class BaseFrameReceiver {
-    private native long nativeOpen(long sys_ptr, FrameReceiverConfig conf, boolean is_loopback) throws ModemException;
+    private native long nativeOpen(long sys_ptr, FrameReceiverConfig conf) throws ModemException;
     private native void nativeClose();
     private native void nativeTerminate(int urgency);
     private native long nativeRecv(byte[] frame, long offset, long length) throws IOException;
@@ -20,12 +20,11 @@ public abstract class BaseFrameReceiver {
     private long dec_ptr;
 
     protected abstract void initSystem() throws ModemException;
-    protected abstract boolean isLoopback();
-
+    
     public BaseFrameReceiver(FrameReceiverConfig conf) throws ModemException {
         this.quietSystem = QuietSystem.getSystem();
         initSystem();
-        this.dec_ptr = nativeOpen(this.quietSystem.sys_ptr, conf, isLoopback());
+        this.dec_ptr = nativeOpen(this.quietSystem.sys_ptr, conf);
     }
 
     public long receive(byte[] frame) throws IOException {

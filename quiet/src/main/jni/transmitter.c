@@ -6,11 +6,6 @@ ssize_t quiet_android_playback_callback(void *enc_v, float *buf, size_t num_fram
 }
 
 void android_encoder_destroy(quiet_android_encoder *enc) {
-    if (enc->is_loopback) {
-        // loopback_remove_producer works even if producer isn't
-        // present so this should be a safe call always
-        loopback_remove_producer(enc->loopback, enc->producer);
-    }
     if (enc->player) {
         quiet_opensl_destroy_player(enc->player);
     }
@@ -36,18 +31,11 @@ void android_encoder_terminate(quiet_android_encoder *enc, int urgency) {
     if (urgency < 1) {
         return;
     }
-
-    if (enc->is_loopback) {
-        loopback_remove_producer(enc->loopback, enc->producer);
-    } else {
-        // invoke stop on our player. if we have drained the frame buffer then this will
-        // smoothly stop sound playback
         quiet_opensl_stop_player(enc->player);
-    }
 }
 
 quiet_android_encoder *android_encoder_create(JNIEnv *env, const quiet_encoder_options *opt,
-                                              quiet_android_system *sys, bool is_loopback,
+                                              quiet_android_system *sys,
                                               size_t num_bufs, size_t buf_len) {
     quiet_android_encoder *e = calloc(1, sizeof(quiet_android_encoder));
     e->enc = quiet_encoder_create(opt, 44100);
@@ -56,40 +44,30 @@ quiet_android_encoder *android_encoder_create(JNIEnv *env, const quiet_encoder_o
         throw_error(env, cache.system.init_exc_klass, encoder_error_format, quiet_get_last_error());
         return NULL;
     }
-    if (is_loopback) {
-        // ignore user-supplied buffer lengths for loopback
-        num_bufs = 1;
-        buf_len = loopback_buffer_length;
-    }
+  
     e->producer = opensl_producer_create(num_bufs, buf_len);
     e->producer->produce = quiet_android_playback_callback;
     e->producer->produce_arg = e->enc;
-    e->is_loopback = is_loopback;
 
-    if (is_loopback) {
-        loopback_add_producer(sys->loopback_sys, e->producer);
-        e->loopback = sys->loopback_sys;
-    } else {
         SLresult res = quiet_opensl_create_player(sys->opensl_sys, e->producer, &e->player);
         if (res != SL_RESULT_SUCCESS) {
             android_encoder_destroy(e);
             throw_error(env, cache.system.init_exc_klass, opensl_playback_error_format, res);
             return NULL;
         }
-    }
-
+    
     return e;
 }
 
 JNIEXPORT jvm_pointer JNICALL Java_org_quietmodem_Quiet_BaseFrameTransmitter_nativeOpen(
-    JNIEnv *env, jobject This, jvm_pointer j_sys, jobject conf, jboolean is_loopback) {
+    JNIEnv *env, jobject This, jvm_pointer j_sys, jobject conf) {
     quiet_android_system *sys = (quiet_android_system *)recover_pointer(j_sys);
     jvm_pointer j_profile = (*env)->GetLongField(env, conf, cache.encoder_profile.ptr);
     quiet_encoder_options *opt = (quiet_encoder_options *)recover_pointer(j_profile);
     size_t num_bufs = (*env)->GetLongField(env, conf, cache.encoder_profile.num_bufs);
     size_t buf_len = (*env)->GetLongField(env, conf, cache.encoder_profile.buf_len);
 
-    quiet_android_encoder *enc = android_encoder_create(env, opt, sys, is_loopback, num_bufs, buf_len);
+    quiet_android_encoder *enc = android_encoder_create(env, opt, sys, num_bufs, buf_len);
 
     return jvm_opaque_pointer(enc);
 }
@@ -152,9 +130,6 @@ JNIEXPORT jlong JNICALL Java_org_quietmodem_Quiet_BaseFrameTransmitter_nativeSen
             case quiet_would_block:
                 throw_error(env, cache.java.io_exception_klass, "Asynchronous operation would block");
                 break;
-            case quiet_timedout:
-                throw_error(env, cache.java.socket_timeout_exception_klass, "Timed out");
-                break;
             default:
                 throw_error(env, cache.java.io_exception_klass, "Unspecified I/O Error");
                 break;
@@ -195,4 +170,3 @@ JNIEXPORT jlong JNICALL Java_org_quietmodem_Quiet_BaseFrameTransmitter_nativeGet
 
     return quiet_encoder_get_frame_len(enc->enc);
 }
-

@@ -6,11 +6,6 @@ public class FrameTransmitter extends BaseFrameTransmitter {
         this.quietSystem.initOpenSL();
     }
 
-    @Override
-    protected boolean isLoopback() {
-        return false;
-    }
-
     public FrameTransmitter(FrameTransmitterConfig conf) throws ModemException {
         super(conf);
     }

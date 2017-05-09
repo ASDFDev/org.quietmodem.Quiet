@@ -10,12 +10,10 @@ public class QuietSystem {
 
     final long sys_ptr;
     private boolean init_opensl;
-    private boolean init_loopback;
 
     protected QuietSystem() throws ModemException {
         this.sys_ptr = nativeOpen();
         this.init_opensl = false;
-        this.init_loopback = false;
     }
 
     synchronized static QuietSystem getSystem() throws ModemException {
@@ -38,13 +36,6 @@ public class QuietSystem {
         if (!this.init_opensl) {
             nativeOpenOpenSL();
             this.init_opensl = true;
-        }
-    }
-
-    synchronized void initLoopback() throws ModemException {
-        if (!this.init_loopback) {
-            nativeOpenLoopback();
-            this.init_loopback = true;
         }
     }
 

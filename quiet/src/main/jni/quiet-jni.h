@@ -7,9 +7,6 @@
 
 #include <jni.h>
 #include <quiet.h>
-#include <quiet-lwip/quiet-lwip.h>
-#include <quiet-lwip/lwip/lwip/sockets.h>
-#include <quiet-lwip/lwip/lwip/netdb.h>
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
 #include <android/log.h>
@@ -122,30 +119,6 @@ extern const int loopback_sleep;
 extern const int loopback_buffer_length;
 
 typedef struct {
-    pthread_mutex_t lock;
-    pthread_t thread;
-
-    quiet_opensl_producer **producers;
-    quiet_opensl_consumer **consumers;
-
-    size_t num_producers;
-    size_t num_consumers;
-
-    size_t producers_cap;
-    size_t consumers_cap;
-
-    bool is_closed;
-} quiet_loopback_system;
-
-void loopback_add_producer(quiet_loopback_system *loopback, quiet_opensl_producer *p);
-void loopback_remove_producer(quiet_loopback_system *loopback, quiet_opensl_producer *p);
-void loopback_add_consumer(quiet_loopback_system *loopback, quiet_opensl_consumer *c);
-void loopback_remove_consumer(quiet_loopback_system *loopback, quiet_opensl_consumer *c);
-void quiet_loopback_system_create(quiet_loopback_system **sys_dest);
-void quiet_loopback_system_destroy(quiet_loopback_system *sys);
-
-typedef struct {
-    quiet_loopback_system *loopback_sys;
     quiet_opensl_system *opensl_sys;
 } quiet_android_system;
 
@@ -153,47 +126,24 @@ typedef struct {
     quiet_encoder *enc;
     quiet_opensl_producer *producer;
     quiet_opensl_player *player;
-    quiet_loopback_system *loopback;
-    bool is_loopback;
 } quiet_android_encoder;
 
 typedef struct {
     quiet_decoder *dec;
     quiet_opensl_consumer *consumer;
     quiet_opensl_recorder *recorder;
-    quiet_loopback_system *loopback;
-    bool is_loopback;
 } quiet_android_decoder;
 
 typedef struct {
-    quiet_lwip_interface *interface;
-
-    quiet_opensl_player *player;
-    quiet_opensl_producer *producer;
-
-    quiet_opensl_consumer *consumer;
-    quiet_opensl_recorder *recorder;
-
-    quiet_loopback_system *loopback;
-    bool is_loopback;
-} quiet_lwip_android;
-
-void lwip_error_throw_exc(JNIEnv *env);
-
-typedef struct {
     jclass unknown_host_exception_klass;
-    jclass socket_timeout_exception_klass;
-    jfieldID socket_timeout_bytes;
     jclass interrupted_io_exception_klass;
     jfieldID interrupted_bytes;
     jclass eof_exception_klass;
     jclass bind_exception_klass;
     jclass connect_exception_klass;
-    jclass socket_exception_klass;
     jclass io_exception_klass;
     jclass out_of_memory_error_klass;
     jclass illegal_arg_klass;
-    jclass no_route_exception_klass;
 } java_java_cache;
 
 typedef struct {
@@ -201,27 +151,6 @@ typedef struct {
     jclass init_exc_klass;
     jfieldID ptr;
 } java_system_cache;
-
-typedef struct {
-    jclass klass;
-    jfieldID addr_bytes;
-} java_inet_address_cache;
-
-typedef struct {
-    jclass klass;
-    jfieldID inet_address;
-    jfieldID port;
-    jmethodID ctor_bytes;
-} java_inet_socket_address_cache;
-
-typedef struct {
-    jclass klass;
-    jfieldID inet_socket_address;
-    jfieldID buf;
-    jfieldID offset;
-    jfieldID length;
-    jmethodID set_socket_addr;
-} java_datagram_packet_cache;
 
 typedef struct {
     jclass klass;
@@ -259,36 +188,6 @@ typedef struct {
 
 typedef struct {
     jclass klass;
-    jfieldID encoder_profile;
-    jfieldID decoder_profile;
-    jfieldID local_address;
-    jfieldID netmask;
-    jfieldID gateway;
-    jfieldID hardware_address;
-} java_network_interface_config_cache;
-
-typedef struct {
-    jclass klass;
-    jfieldID ptr;
-} java_network_interface_cache;
-
-typedef struct {
-    jclass klass;
-    jfieldID fd;
-} java_datagram_cache;
-
-typedef struct {
-    jclass klass;
-    jfieldID fd;
-} java_server_socket_cache;
-
-typedef struct {
-    jclass klass;
-    jfieldID fd;
-} java_socket_cache;
-
-typedef struct {
-    jclass klass;
     jfieldID fd;
 } java_input_stream_cache;
 
@@ -299,9 +198,6 @@ typedef struct {
 
 typedef struct {
     java_java_cache java;
-    java_inet_address_cache inet_address;
-    java_inet_socket_address_cache inet_socket_address;
-    java_datagram_packet_cache datagram_packet;
     java_system_cache system;
     java_encoder_profile_cache encoder_profile;
     java_decoder_profile_cache decoder_profile;
@@ -309,11 +205,6 @@ typedef struct {
     java_decoder_cache decoder;
     java_complex_cache complex;
     java_frame_stats_cache frame_stats;
-    java_network_interface_config_cache network_interface_config;
-    java_network_interface_cache network_interface;
-    java_datagram_cache datagram;
-    java_server_socket_cache server_socket;
-    java_socket_cache socket;
     java_input_stream_cache input_stream;
     java_output_stream_cache output_stream;
 } java_cache;
@@ -327,4 +218,3 @@ extern const char *encoder_profile_error_format;
 extern const char *decoder_profile_error_format;
 extern const char *encoder_error_format;
 extern const char *decoder_error_format;
-extern const char *lwip_error_format;

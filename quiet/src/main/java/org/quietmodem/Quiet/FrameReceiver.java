@@ -6,11 +6,6 @@ public class FrameReceiver extends BaseFrameReceiver {
         this.quietSystem.initOpenSL();
     }
 
-    @Override
-    protected boolean isLoopback() {
-        return false;
-    }
-
     public FrameReceiver(FrameReceiverConfig conf) throws ModemException {
         super(conf);
     }
